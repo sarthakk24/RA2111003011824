@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { NextFunction, Request, Response } from 'express'
 const fs = require('fs')
 export const calculate = async (
@@ -8,8 +9,31 @@ export const calculate = async (
     try {
         const storedState = fs.readFileSync('state.json', 'utf8')
         const windowPrevSate = JSON.parse(storedState)
+
+        let result = ''
+        const type = req.params.numberID
+        switch (type) {
+            case 'p':
+                result = 'prime'
+                break
+
+            case 'f':
+                result = 'fibo'
+                break
+
+            case 'e':
+                result = 'even'
+                break
+
+            case 'r':
+                result = 'random'
+                break
+        }
+
         const windowSize = 10
-        const numbers = [2, 4, 6, 5, 8]
+        const numbers: Array<Number> = await axios.get(
+            `http://20.244.56.144/test/${type}`
+        )
         let windowCurrState = numbers
 
         if (windowCurrState.length > windowSize) {
@@ -21,7 +45,7 @@ export const calculate = async (
 
         let sum = 0
         windowCurrState.forEach(function (number) {
-            sum += number
+            sum = sum + number
         })
         const avg = sum / windowCurrState.length
         res.status(200).json({
@@ -30,6 +54,10 @@ export const calculate = async (
             windowCurrState,
             avg,
         })
+
+        setTimeout(() => {
+            fs.writeFileSync('state.json', JSON.stringify(windowCurrState))
+        }, 0)
     } catch (error) {
         console.log(error)
     }
